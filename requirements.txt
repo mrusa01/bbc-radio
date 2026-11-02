@@ -1,0 +1,11 @@
+# BBC Radio 运行时依赖
+#
+# 播放只需要 mpv（系统包或 flatpak 版），不需要 Python 依赖。
+# 下面两个仅在使用「实时转录」和「图形界面」时需要。
+
+# 实时语音转文字（可选）
+faster-whisper==1.2.1
+av==12.3.0        # 必须 <19，否则 faster-whisper API 不兼容
+
+# 图形界面（可选）
+PyQt5>=5.15
