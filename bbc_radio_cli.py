@@ -74,6 +74,31 @@ def cmd_volume(args):
 
 
 def cmd_transcribe(args):
+    # 若当前解释器缺 faster-whisper，自动切换到已装好的解释器
+    py = transcribe.available_interpreter()
+    if py is None:
+        print(
+            "错误: 找不到装有 faster-whisper 的 Python 环境。\n"
+            "  安装：./install.sh --with-asr\n"
+            "  或设置 BBC_RADIO_PYTHON 指向已装好的 python",
+            file=sys.stderr,
+        )
+        return 1
+    if py != sys.executable:
+        import os
+        import subprocess
+        cli = os.path.abspath(__file__)
+        cmd = [py, cli, "transcribe"]
+        if args.station:
+            cmd.append(args.station)
+        if args.model:
+            cmd += ["--model", args.model]
+        try:
+            return subprocess.call(cmd)
+        except KeyboardInterrupt:
+            print("\n已结束转录。")
+            return 0
+
     try:
         for line in transcribe.stream(args.station, args.model):
             print(line, flush=True)

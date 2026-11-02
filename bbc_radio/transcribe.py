@@ -51,13 +51,63 @@ def _playlist(url, timeout=10):
     ).stdout
 
 
+def _venv_python():
+    """按优先级查找装有 faster-whisper 的 python 解释器。
+
+    1. 环境变量 BBC_RADIO_PYTHON
+    2. 项目 venv：~/.local/share/bbc-radio/venv
+    3. 用户已有 venv：~/.local/venvs/whisper
+    返回路径字符串，找不到返回 None。
+    """
+    import shutil as _shutil
+    candidates = []
+    env_py = os.environ.get("BBC_RADIO_PYTHON")
+    if env_py:
+        candidates.append(env_py)
+    candidates.append(os.path.expanduser("~/.local/share/bbc-radio/venv/bin/python3"))
+    candidates.append(os.path.expanduser("~/.local/venvs/whisper/bin/python3"))
+    for path in candidates:
+        if os.path.isfile(path) and os.access(path, os.X_OK):
+            return path
+    return None
+
+
+def available_interpreter():
+    """返回能 import faster_whisper 的 python 路径，找不到返回 None。"""
+    import subprocess as _sp
+    # 当前解释器优先
+    if _has_faster_whisper():
+        return sys.executable
+    venv_py = _venv_python()
+    if venv_py and venv_py != sys.executable:
+        try:
+            r = _sp.run([venv_py, "-c", "import faster_whisper"],
+                        capture_output=True, timeout=25)
+            if r.returncode == 0:
+                return venv_py
+        except (OSError, _sp.SubprocessError):
+            pass
+    return None
+
+
+def _has_faster_whisper():
+    try:
+        import faster_whisper  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
 def load_model(model_name=None, cpu_threads=4):
     """加载 faster-whisper 模型。首次会自动下载并缓存。"""
     try:
         from faster_whisper import WhisperModel
     except ImportError:
         raise RuntimeError(
-            "缺少 faster-whisper。安装：pip install faster-whisper"
+            "缺少 faster-whisper。请任选一种：\n"
+            "  ./install.sh --with-asr          # 项目内建 venv\n"
+            "  pip install faster-whisper==1.2.1 'av<19'\n"
+            "  或设置 BBC_RADIO_PYTHON 指向已装好的 python"
         )
     name = model_name or os.environ.get("WHISPER_MODEL", DEFAULT_MODEL)
     return WhisperModel(name, device="cpu", compute_type="int8",
