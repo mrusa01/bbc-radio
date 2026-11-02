@@ -2,12 +2,27 @@
 
 Linux 上的 BBC 电台播放器，带**实时语音转文字**。
 
+[![Release](https://img.shields.io/github/v/release/mrusa01/bbc-radio)](https://github.com/mrusa01/bbc-radio/releases/latest)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 - 12 个电台：Radio 1–6、1Xtra、1 Anthems、1 Dance、3 Unwind、4 Extra、World Service
 - 命令行 + PyQt5 图形界面双入口
 - 实时转录用 [faster-whisper](https://github.com/SYSTRAN/faster-whisper) 在本机 CPU 上跑，**不联网、零 API 费用**
 - 附带 [pi](https://github.com/earendil-works/pi) 技能，可以用中文语音指令控制
 
 > 本项目只播放 BBC 公开的直播流，不涉及任何内容下载或再分发。
+
+## 下载
+
+不想用 git 的话，直接下载发布包：
+
+**[⬇ bbc-radio-1.0.0.zip](https://github.com/mrusa01/bbc-radio/releases/latest)**
+
+```bash
+unzip bbc-radio-1.0.0.zip
+cd bbc-radio-1.0.0
+./install.sh
+```
 
 ## 依赖
 
