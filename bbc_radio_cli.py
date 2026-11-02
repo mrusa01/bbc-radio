@@ -51,12 +51,12 @@ def cmd_list(_args):
 
 
 def cmd_status(_args):
-    pid = player.read_pid()
-    if pid is None:
+    pids = player.find_players()
+    if not pids:
         print("状态: 未播放")
         return 0
     vol = player.get_volume()
-    print("状态: 播放中（pid %s）" % pid)
+    print("状态: 播放中（pid %s）" % pids[0])
     if vol is not None:
         print("音量: %d%%" % vol)
     return 0

@@ -101,26 +101,85 @@ def read_pid():
 
 
 def is_playing():
-    """是否有 BBC 播放会话在跑。"""
-    return read_pid() is not None
+    """是否有 BBC 播放会话在跑。
+
+    同时检查 pidfile 与实际进程，避免 pidfile 丢失时误报未播放。
+    """
+    return read_pid() is not None or find_players() != []
+
+
+# 用于识别本项目启动的 mpv 进程的流地址特征
+_STREAM_MARKERS = ("as-hls-ww-liv", "stream.live.vc.bbcmedi")
+
+
+def find_players():
+    """扫描系统里所有正在播 BBC 的 mpv 进程 pid。
+
+    无论是否由本项目启动、pidfile 是否还在，都能找到。
+    flatpak 版 mpv 会多一层 bwrap 包装进程，两者都返回。
+    """
+    pids = []
+    try:
+        out = subprocess.run(
+            ["pgrep", "-f", "mpv.*as-hls-ww-liv[e]"],
+            capture_output=True, text=True, timeout=5,
+        ).stdout
+        pids += [int(x) for x in out.split() if x.isdigit()]
+        out = subprocess.run(
+            ["pgrep", "-f", "mpv.*stream.live.vc.bbcmedi[a]"],
+            capture_output=True, text=True, timeout=5,
+        ).stdout
+        pids += [int(x) for x in out.split() if x.isdigit()]
+    except (OSError, subprocess.SubprocessError, ValueError):
+        pass
+
+    # 本机拥有的 mpv 主进程（覆盖启动瞬间还没读到流地址的情况）
+    pid = read_pid()
+    if pid is not None:
+        pids.append(pid)
+
+    return sorted(set(pids))
 
 
 def stop():
-    """停止播放。返回 True 表示确实停掉了一个会话。"""
+    """停止播放。返回 True 表示确实停掉了至少一个进程。
+
+    不依赖 pidfile：按流地址特征扫描并终止所有 BBC mpv 进程，
+    避免多次 play 后残留孤儿进程继续出声。
+    """
     stopped = False
-    pid = read_pid()
-    if pid is not None:
-        try:
-            os.kill(pid, 15)
-            stopped = True
-        except OSError:
-            pass
-    # 兜底：清理残留 socket 与 pidfile
+    targets = find_players()
+
+    if targets:
+        # 先用 SIGTERM 让 mpv 正常退出
+        for sig in (15, 9):
+            alive = []
+            for pid in targets:
+                try:
+                    os.kill(pid, sig)
+                    stopped = True
+                    alive.append(pid)
+                except OSError:
+                    pass
+            if not alive:
+                break
+            if sig == 15:
+                # 等最多 3 秒再升级为 SIGKILL
+                for _ in range(15):
+                    time.sleep(0.2)
+                    if all(not _pid_alive(p) for p in alive):
+                        break
+                targets = [p for p in alive if _pid_alive(p)]
+                if not targets:
+                    break
+
+    # 清理残留 socket 与 pidfile
     for path in (PIDFILE, MPV_SOCK):
         try:
             os.remove(path)
         except OSError:
             pass
+
     return stopped
 
 
