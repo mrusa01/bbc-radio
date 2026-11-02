@@ -19,7 +19,7 @@ for arg in "$@"; do
   case "$arg" in
     --cli-only)  CLI_ONLY=1 ;;
     --with-asr)  WITH_ASR=1 ;;
-    -h|--help)   sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help)   sed -n '3,9p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "未知参数: $arg" >&2; exit 1 ;;
   esac
 done
