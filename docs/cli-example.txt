@@ -1,0 +1,21 @@
+$ bbc-radio list
+  1   BBC Radio 1                one, r1
+  2   BBC Radio 2                two, r2
+  3   BBC Radio 3                three, r3
+  4   BBC Radio 4                four, r4, fourfm
+  5   BBC Radio 5 Live           five, r5, fivelive
+  6   BBC Radio 6 Music          six, r6, 6music
+  1x  BBC Radio 1Xtra            onextra, r1x
+  1a  BBC Radio 1 Anthems        anthems, r1a
+  1d  BBC Radio 1 Dance          dance, r1d
+  3u  BBC Radio 3 Unwind         unwind, r3u
+  4x  BBC Radio 4 Extra          fourextra, r4x
+  ws  BBC World Service          world, worldservice, bbcws
+
+$ bbc-radio play 4
+正在播放: BBC Radio 4（pid 78164）
+
+$ bbc-radio transcribe 4
+[启动] BBC Radio 4 | 模型 small.en | 约 32 秒一个窗口
+[18:28:03] the government should focus on in terms of spending. You'll see
+things like the NHS, but also things like schools and education and social care.
